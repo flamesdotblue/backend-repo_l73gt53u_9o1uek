@@ -2,47 +2,45 @@
 Database Schemas
 
 Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
-
 Each Pydantic model represents a collection in your database.
 Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+- Item -> "item" collection
+- Consumption -> "consumption" collection
 """
 
 from pydantic import BaseModel, Field
 from typing import Optional
+import datetime as dt
 
-# Example schemas (replace with your own):
+# Core domain schemas
 
-class User(BaseModel):
-    """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
-    """
-    name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
+class Item(BaseModel):
+    """Food item definition with unit and protein per unit"""
+    name: str = Field(..., description="Item name, e.g., Chicken Breast")
+    unit: str = Field(..., description="Unit of measurement, e.g., gm, cup, roti")
+    protein_per_unit: float = Field(..., gt=0, description="Protein grams per 1 unit")
 
-class Product(BaseModel):
-    """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
-    """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
 
-# Add your own schemas here:
-# --------------------------------------------------
+class Consumption(BaseModel):
+    """A single consumption entry for a specific date"""
+    date: dt.date = Field(..., description="The calendar date of consumption")
+    item_id: str = Field(..., description="Reference to the item _id (string)")
+    quantity: float = Field(..., gt=0, description="How many units consumed on that date")
 
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+
+# Optional response models (used in route responses)
+class ItemOut(BaseModel):
+    id: str
+    name: str
+    unit: str
+    protein_per_unit: float
+
+class ConsumptionOut(BaseModel):
+    id: str
+    date: dt.date
+    item_id: str
+    item_name: str
+    unit: str
+    quantity: float
+    protein_per_unit: float
+    protein_total: float
